@@ -1,17 +1,16 @@
-package sample;
+package com;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class ServerConnection {
     private static ServerConnection serverConnectionInstance = null;
     public String myName;
     public Socket socket;
-    public Scanner input;
-    public PrintWriter output;
+    public ObjectInputStream input;
+    public ObjectOutputStream output;
 
     public static ServerConnection getServerConnectionInstance(){
         if(serverConnectionInstance == null){
@@ -22,7 +21,7 @@ public class ServerConnection {
 
     public void runServerConnection() throws IOException {
         Socket socket = new Socket("127.0.0.1", 59001);
-        input = new Scanner(socket.getInputStream());
-        output = new PrintWriter(socket.getOutputStream(), true);
+        output = new ObjectOutputStream(socket.getOutputStream());
+        input = new ObjectInputStream(socket.getInputStream());
     }
 }
