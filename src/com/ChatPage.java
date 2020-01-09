@@ -8,16 +8,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class ChatPage implements Initializable{
     @FXML
@@ -29,35 +27,46 @@ public class ChatPage implements Initializable{
     @FXML
     public TextFlow adreseeTextField;
 
-    private Map<String,TextFlow> textFlowsMap;
+    private Map<String,TextFlow> textFlowsMap = new HashMap<>();
+    private String previousUser = "Piotr1";
+
+    public void handleListElementClick(MouseEvent event){
+        System.out.println("clicked on " + userContacts.getSelectionModel().getSelectedItem());
+        TextFlow newTextFlow =  textFlowsMap.get(userContacts.getSelectionModel().getSelectedItem());
+        textFlowsMap.put(previousUser, adreseeTextField);
+        adreseeTextField = newTextFlow;
+        previousUser = userContacts.getSelectionModel().getSelectedItem();
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
             initContactList();
-            new Thread() {
-
-                // runnable for that thread
+            Thread one = new Thread() {
                 public void run() {
-                    for (int i = 0; i < 50; i++) {
+                    while (true){
+                        System.out.println("done");
                         try {
-                            // imitating work
-                            Thread.sleep(new Random().nextInt(1000));
-                        } catch (InterruptedException ex) {
-                            ex.printStackTrace();
-
-                        }
-                        final double progress = i*0.05;
-                        // update ProgressIndicator on FX thread
-                        Platform.runLater(new Runnable() {
-
-                            public void run() {
-                                System.out.println(progress);
+                            Object streamObject = ServerConnection.getServerConnectionInstance().input.readObject();
+                            if(streamObject!=null){
+                                Message m = (Message) streamObject;
+                                Platform.runLater(()->{
+                                    //modify your javafx app here.
+                                    handleMessage(m);
+                                });
                             }
-                        });
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }.start();
+            };
+            one.start();
             //keepListeningServer();
         } catch (IOException e) {
             e.printStackTrace();
@@ -65,6 +74,7 @@ public class ChatPage implements Initializable{
             e.printStackTrace();
         }
     }
+
 
     public void initContactList() throws IOException, ClassNotFoundException {
         //ServerConnection.getServerConnectionInstance().output.println("GET_CONTANCT_LIST");
@@ -74,6 +84,9 @@ public class ChatPage implements Initializable{
         ServerConnection.getServerConnectionInstance().output.writeObject(m);
         Message returnMessage = (Message) ServerConnection.getServerConnectionInstance().input.readObject();
         handleMessage(returnMessage);
+        for (int i=0; i<userContacts.getItems().size();i++){
+            textFlowsMap.put(userContacts.getItems().get(i), new TextFlow());
+        }
 
         //userContacts = new ListView<>();
 
@@ -120,7 +133,7 @@ public class ChatPage implements Initializable{
                 updateUserContactsList(m);
             case TEXT:
                 if(m.getAdressee() != null){
-                    Text newMessage = new Text(m.getTextMessage());
+                    Text newMessage = new Text(m.getTextMessage()+"\n");
                     adreseeTextField.getChildren().add(newMessage);
                     //SocketServer.getUserNameAndPrintWriterMap().get(m.getAdressee()).writeObject(m);
                 }
