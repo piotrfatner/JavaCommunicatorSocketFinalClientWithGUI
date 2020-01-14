@@ -25,6 +25,12 @@ public class Message implements Serializable{
         this.adressee = adressee;
     }
 
+    public Message(EMessageType messageType, byte[] fileMessage, String adressee){
+        this.eMessageType = messageType;
+        this.fileMessage = fileMessage;
+        this.adressee = adressee;
+    }
+
     public EMessageType geteMessageType() {
         return eMessageType;
     }

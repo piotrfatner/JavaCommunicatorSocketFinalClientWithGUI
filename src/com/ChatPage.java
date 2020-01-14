@@ -1,18 +1,26 @@
 package com;
 
+import com.sun.deploy.util.StringUtils;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.*;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
@@ -32,10 +40,10 @@ public class ChatPage implements Initializable{
 
     public void handleListElementClick(MouseEvent event){
         System.out.println("clicked on " + userContacts.getSelectionModel().getSelectedItem());
-        TextFlow newTextFlow =  textFlowsMap.get(userContacts.getSelectionModel().getSelectedItem());
+        /*TextFlow newTextFlow =  textFlowsMap.get(userContacts.getSelectionModel().getSelectedItem());
         textFlowsMap.put(previousUser, adreseeTextField);
         adreseeTextField = newTextFlow;
-        previousUser = userContacts.getSelectionModel().getSelectedItem();
+        previousUser = userContacts.getSelectionModel().getSelectedItem();*/
     }
 
     @Override
@@ -73,6 +81,50 @@ public class ChatPage implements Initializable{
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+        typingField.setOnDragOver(getOnDragOverEvent());
+        typingField.setOnDragDropped(getOnDragDroppedEvent());
+    }
+
+    public EventHandler<DragEvent> getOnDragOverEvent(){
+        EventHandler<DragEvent> newOnDragOverEvent = new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                if (event.getGestureSource() != typingField && event.getDragboard().hasFiles()) {
+                    /*
+                     * allow for both copying and moving, whatever user chooses
+                     */
+                    event.acceptTransferModes(TransferMode.COPY);
+                }
+                event.consume();
+
+            }
+        };
+        return newOnDragOverEvent;
+    }
+
+    public EventHandler<DragEvent> getOnDragDroppedEvent() {
+        EventHandler<DragEvent> onDragDroppedEvent = new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                List<File> files = (ArrayList<File>) db.getContent(DataFormat.FILES);
+
+                boolean success = false;
+                if (files != null) {
+                    File file = files.get(0);
+                    typingField.setText(file.getAbsolutePath());
+                    success = true;
+                }
+                /*
+                 * let the source know whether the string was successfully
+                 * transferred and used
+                 */
+                event.setDropCompleted(success);
+
+                event.consume();
+            };
+        };
+        return onDragDroppedEvent;
     }
 
 
@@ -107,13 +159,35 @@ public class ChatPage implements Initializable{
     }
 
     public void sendMessage() throws IOException {
+        handleSendingMessage();
+
+    }
+    private List<String> imageFormats = Arrays.asList(".JPG",".PNG");
+
+    public void handleSendingMessage() throws IOException {
         String textOfMessage = typingField.getText();
         String selectedGuy = userContacts.getSelectionModel().getSelectedItem();
-        Message m = new Message(EMessageType.TEXT, textOfMessage, selectedGuy);
-        Text textToAdd = new Text(typingField.getText());
-        adreseeTextField.getChildren().add(textToAdd);
-        typingField.clear();
-        ServerConnection.getServerConnectionInstance().output.writeObject(m);
+        Message m;
+        if(textOfMessage.toUpperCase().contains(imageFormats.get(0))){
+            BufferedImage bufferimage = ImageIO.read(new File(textOfMessage));
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            ImageIO.write(bufferimage, "jpg", output );
+            byte [] picture = output.toByteArray();
+            m = new Message(EMessageType.JPG, picture, selectedGuy);
+            ImageView imageView = new ImageView();
+            Image image = new Image("file:"+textOfMessage);
+            imageView.setImage(image);
+            imageView.setFitHeight(100);
+            imageView.setFitWidth(100);
+            adreseeTextField.getChildren().add(imageView);
+            ServerConnection.getServerConnectionInstance().output.writeObject(m);
+        } else{
+            Text textToAdd = new Text(typingField.getText()+"\n");
+            adreseeTextField.getChildren().add(textToAdd);
+            typingField.clear();
+            m = new Message(EMessageType.TEXT, textOfMessage, selectedGuy);
+            ServerConnection.getServerConnectionInstance().output.writeObject(m);
+        }
 
     }
 
