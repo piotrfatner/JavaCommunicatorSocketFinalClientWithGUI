@@ -8,6 +8,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -15,14 +16,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
 
 public class ChatPage implements Initializable{
@@ -34,6 +35,9 @@ public class ChatPage implements Initializable{
 
     @FXML
     public TextFlow adreseeTextField;
+
+    @FXML
+    public ScrollPane sp;
 
     private Map<String,TextFlow> textFlowsMap = new HashMap<>();
     private String previousUser = "Piotr1";
@@ -177,9 +181,10 @@ public class ChatPage implements Initializable{
             ImageView imageView = new ImageView();
             Image image = new Image("file:"+textOfMessage);
             imageView.setImage(image);
-            imageView.setFitHeight(100);
-            imageView.setFitWidth(100);
+            imageView.setFitHeight(600);
+            imageView.setFitWidth(600);
             adreseeTextField.getChildren().add(imageView);
+            typingField.clear();
             ServerConnection.getServerConnectionInstance().output.writeObject(m);
         } else{
             Text textToAdd = new Text(typingField.getText()+"\n");
@@ -205,12 +210,39 @@ public class ChatPage implements Initializable{
         switch (m.geteMessageType()){
             case SERVER_USERS:
                 updateUserContactsList(m);
+                break;
             case TEXT:
                 if(m.getAdressee() != null){
                     Text newMessage = new Text(m.getTextMessage()+"\n");
                     adreseeTextField.getChildren().add(newMessage);
                     //SocketServer.getUserNameAndPrintWriterMap().get(m.getAdressee()).writeObject(m);
+                    sp.vvalueProperty().bind(adreseeTextField.heightProperty());
+
                 }
+                break;
+            case JPG:
+                if(m.getAdressee()!= null){
+                    Image i = new Image(new ByteArrayInputStream(m.getFileMessage()));
+                    ImageView imageView = new ImageView(i);
+                    imageView.setFitHeight(600);
+                    imageView.setFitWidth(600);
+                    adreseeTextField.getChildren().add(imageView);
+                    FileChooser aa = new FileChooser();
+                    sp.vvalueProperty().bind(adreseeTextField.heightProperty());
+                    File dest = aa.showSaveDialog(typingField.getScene().getWindow());
+                    if (dest != null) {
+                        try {
+                            File newFile = new File("C:/Users/fatne/IdeaProjects/JavaCommunicatorSocketProject/JavaCommunicatorSocketFinalClientWithGUI/src/com/newPicture.jpg");
+                            OutputStream os = new FileOutputStream(newFile);
+                            os.write(m.getFileMessage());
+                            os.close();
+                            Files.copy(newFile.toPath(), dest.toPath());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
 
         }
     }

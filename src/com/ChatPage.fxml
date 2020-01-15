@@ -9,24 +9,24 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.TextFlow?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="481.0" prefWidth="707.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ChatPage">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="782.0" prefWidth="829.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ChatPage">
    <children>
-      <Pane prefHeight="481.0" prefWidth="201.0">
+      <Pane prefHeight="699.0" prefWidth="201.0">
          <children>
             <Label alignment="CENTER" contentDisplay="CENTER" layoutX="4.0" layoutY="6.0" prefHeight="70.0" prefWidth="194.0" text="Contacts" />
-            <ListView fx:id="userContacts" layoutX="1.0" layoutY="83.0" onMouseClicked="#handleListElementClick" prefHeight="263.0" prefWidth="200.0" />
+            <ListView fx:id="userContacts" layoutX="1.0" layoutY="83.0" onMouseClicked="#handleListElementClick" prefHeight="489.0" prefWidth="200.0" />
          </children>
       </Pane>
-      <Pane layoutX="201.0" prefHeight="481.0" prefWidth="507.0">
+      <Pane layoutX="201.0" prefHeight="753.0" prefWidth="619.0">
          <children>
-            <ScrollPane fx:id="sp" layoutX="1.0" layoutY="1.0" prefHeight="410.0" prefViewportHeight="148.0" prefViewportWidth="139.0" prefWidth="496.0" AnchorPane.bottomAnchor="66.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0">
+            <ScrollPane fx:id="sp" layoutX="1.0" layoutY="1.0" prefHeight="668.0" prefViewportHeight="148.0" prefViewportWidth="139.0" prefWidth="608.0" AnchorPane.bottomAnchor="66.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0">
                <content>
-                  <TextFlow fx:id="adreseeTextField" layoutX="14.0" layoutY="81.0" prefHeight="335.0" prefWidth="490.0" style="-fx-background-color: grey;" />
+                  <TextFlow fx:id="adreseeTextField" layoutX="14.0" layoutY="81.0" prefHeight="655.0" prefWidth="599.0" style="-fx-background-color: grey;" />
                </content>
             </ScrollPane>
             <Label fx:id="adreseeName" alignment="CENTER" contentDisplay="CENTER" layoutX="144.0" layoutY="32.0" prefHeight="42.0" prefWidth="230.0" style="-fx-background-color: grey;" />
-            <Button fx:id="sendButton" layoutX="426.0" layoutY="418.0" mnemonicParsing="false" onAction="#sendMessage" prefHeight="61.0" prefWidth="79.0" text="Send" />
-            <TextField fx:id="typingField" layoutX="14.0" layoutY="421.0" prefHeight="54.0" prefWidth="411.0" promptText="Type Message..." />
+            <Button fx:id="sendButton" layoutX="534.0" layoutY="678.0" mnemonicParsing="false" onAction="#sendMessage" prefHeight="61.0" prefWidth="79.0" text="Send" />
+            <TextField fx:id="typingField" layoutX="31.0" layoutY="682.0" prefHeight="54.0" prefWidth="496.0" promptText="Type Message..." />
          </children>
       </Pane>
    </children>
