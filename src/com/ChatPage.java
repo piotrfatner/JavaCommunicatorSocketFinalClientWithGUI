@@ -1,16 +1,12 @@
 package com;
 
-import com.sun.deploy.util.StringUtils;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -39,16 +35,11 @@ public class ChatPage implements Initializable{
     @FXML
     public ScrollPane sp;
 
-    private Map<String,TextFlow> textFlowsMap = new HashMap<>();
-    private String previousUser = "Piotr1";
+    @FXML
+    public Label adreseeName;
 
-    public void handleListElementClick(MouseEvent event){
-        System.out.println("clicked on " + userContacts.getSelectionModel().getSelectedItem());
-        /*TextFlow newTextFlow =  textFlowsMap.get(userContacts.getSelectionModel().getSelectedItem());
-        textFlowsMap.put(previousUser, adreseeTextField);
-        adreseeTextField = newTextFlow;
-        previousUser = userContacts.getSelectionModel().getSelectedItem();*/
-    }
+    private Map<String,ObservableList<Node>> textFlowsMap = new HashMap<>();
+    private String previousUser = "";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -79,7 +70,6 @@ public class ChatPage implements Initializable{
                 }
             };
             one.start();
-            //keepListeningServer();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -87,6 +77,20 @@ public class ChatPage implements Initializable{
         }
         typingField.setOnDragOver(getOnDragOverEvent());
         typingField.setOnDragDropped(getOnDragDroppedEvent());
+        typingField.setOnKeyPressed(getTypingFieldListenerHandler());
+    }
+
+
+    public void handleListElementClick(MouseEvent event){
+        System.out.println("clicked on " + userContacts.getSelectionModel().getSelectedItem());
+        ObservableList<Node> newTextFlow =  textFlowsMap.get(userContacts.getSelectionModel().getSelectedItem());
+        textFlowsMap.get(previousUser).addAll(adreseeTextField.getChildren());
+        adreseeTextField.getChildren().removeAll(adreseeTextField.getChildren());
+        adreseeTextField.getChildren().addAll(newTextFlow);
+
+
+        previousUser = userContacts.getSelectionModel().getSelectedItem();
+        adreseeName.setText(userContacts.getSelectionModel().getSelectedItem());
     }
 
     public EventHandler<DragEvent> getOnDragOverEvent(){
@@ -131,35 +135,38 @@ public class ChatPage implements Initializable{
         return onDragDroppedEvent;
     }
 
+    public EventHandler<KeyEvent> getTypingFieldListenerHandler(){
+        EventHandler<KeyEvent> typingFieldListenerHandler =  new EventHandler<KeyEvent>()
+        {
+            @Override
+            public void handle(KeyEvent e)
+            {
+                if (e.getCode().equals(KeyCode.ENTER))
+                {
+                    try {
+                        sendMessage();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }
+        };
+        return typingFieldListenerHandler;
+    }
+
 
     public void initContactList() throws IOException, ClassNotFoundException {
-        //ServerConnection.getServerConnectionInstance().output.println("GET_CONTANCT_LIST");
-        //String userNames = ServerConnection.getServerConnectionInstance().input.nextLine();
-
         Message m = new Message(EMessageType.SERVER_USERS, "");
         ServerConnection.getServerConnectionInstance().output.writeObject(m);
         Message returnMessage = (Message) ServerConnection.getServerConnectionInstance().input.readObject();
         handleMessage(returnMessage);
         for (int i=0; i<userContacts.getItems().size();i++){
-            textFlowsMap.put(userContacts.getItems().get(i), new TextFlow());
+            textFlowsMap.put(userContacts.getItems().get(i), new TextFlow().getChildren());
         }
 
         //userContacts = new ListView<>();
 
 
-    }
-
-    /*public void remindToListen(){
-        timeline = new Timeline(new KeyFrame(
-                Duration.millis(1000),
-                ae -> keepListeningServer()));
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
-    }*/
-
-    public void keepListeningServer() throws IOException, ClassNotFoundException {
-        Message m = (Message) ServerConnection.getServerConnectionInstance().input.readObject();
-        handleMessage(m);
     }
 
     public void sendMessage() throws IOException {
@@ -177,7 +184,7 @@ public class ChatPage implements Initializable{
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             ImageIO.write(bufferimage, "jpg", output );
             byte [] picture = output.toByteArray();
-            m = new Message(EMessageType.JPG, picture, selectedGuy);
+            m = new Message(EMessageType.JPG, picture, selectedGuy, ServerConnection.getServerConnectionInstance().myName);
             ImageView imageView = new ImageView();
             Image image = new Image("file:"+textOfMessage);
             imageView.setImage(image);
@@ -190,7 +197,7 @@ public class ChatPage implements Initializable{
             Text textToAdd = new Text(typingField.getText()+"\n");
             adreseeTextField.getChildren().add(textToAdd);
             typingField.clear();
-            m = new Message(EMessageType.TEXT, textOfMessage, selectedGuy);
+            m = new Message(EMessageType.TEXT, textOfMessage, selectedGuy, ServerConnection.getServerConnectionInstance().myName);
             ServerConnection.getServerConnectionInstance().output.writeObject(m);
         }
 
@@ -203,7 +210,10 @@ public class ChatPage implements Initializable{
             userContacts.getItems().add(userName);
         }
         userContacts.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        userContacts.getSelectionModel().getSelectedItem();
+        userContacts.getSelectionModel().selectFirst();
+        previousUser = userContacts.getSelectionModel().getSelectedItem();
+        adreseeName.setText(previousUser);
+        //userContacts.getSelectionModel().getSelectedItem();
     }
 
     public void handleMessage(Message m){
@@ -216,6 +226,7 @@ public class ChatPage implements Initializable{
                     Text newMessage = new Text(m.getTextMessage()+"\n");
                     adreseeTextField.getChildren().add(newMessage);
                     //SocketServer.getUserNameAndPrintWriterMap().get(m.getAdressee()).writeObject(m);
+                    switchViewWhileHandlingMessage(m);
                     sp.vvalueProperty().bind(adreseeTextField.heightProperty());
 
                 }
@@ -228,6 +239,7 @@ public class ChatPage implements Initializable{
                     imageView.setFitWidth(600);
                     adreseeTextField.getChildren().add(imageView);
                     FileChooser aa = new FileChooser();
+                    switchViewWhileHandlingMessage(m);
                     sp.vvalueProperty().bind(adreseeTextField.heightProperty());
                     File dest = aa.showSaveDialog(typingField.getScene().getWindow());
                     if (dest != null) {
@@ -245,5 +257,9 @@ public class ChatPage implements Initializable{
                 break;
 
         }
+    }
+
+    public void switchViewWhileHandlingMessage(Message message){
+
     }
 }

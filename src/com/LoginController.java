@@ -29,7 +29,7 @@ public class LoginController {
                 Message messageBack = new Message(EMessageType.TEXT,userNameField.getText());
                 out.writeObject(messageBack);
             } else if (m.geteMessageType().equals(EMessageType.SERVER_ACCEPTED)) {
-                //ServerConnection.getServerConnectionInstance().myName = userNameField.getText();
+                ServerConnection.getServerConnectionInstance().myName = userNameField.getText();
                 changeScreen(event);
                 break;
             } else if(m.geteMessageType().equals(EMessageType.SERVER_REJECTED)){

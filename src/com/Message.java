@@ -8,6 +8,7 @@ public class Message implements Serializable{
     private String textMessage;
     private byte[] fileMessage;
     private String adressee;
+    private String sender;
 
     public Message(EMessageType messageType, String text){
         this.eMessageType = messageType;
@@ -19,16 +20,18 @@ public class Message implements Serializable{
         this.fileMessage = fileMessage;
     }
 
-    public Message(EMessageType messageType, String text, String adressee){
+    public Message(EMessageType messageType, String text, String adressee, String sender){
         this.eMessageType = messageType;
         this.textMessage = text;
         this.adressee = adressee;
+        this.sender = sender;
     }
 
-    public Message(EMessageType messageType, byte[] fileMessage, String adressee){
+    public Message(EMessageType messageType, byte[] fileMessage, String adressee, String sender){
         this.eMessageType = messageType;
         this.fileMessage = fileMessage;
         this.adressee = adressee;
+        this.sender = sender;
     }
 
     public EMessageType geteMessageType() {
