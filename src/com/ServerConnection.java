@@ -20,6 +20,7 @@ public class ServerConnection {
     }
 
     public void runServerConnection() throws IOException {
+        // Change host address to server address. Previous: 192.168.1.14
         Socket socket = new Socket("127.0.0.1", 59001);
         output = new ObjectOutputStream(socket.getOutputStream());
         input = new ObjectInputStream(socket.getInputStream());

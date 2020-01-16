@@ -5,12 +5,15 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
@@ -38,6 +41,9 @@ public class ChatPage implements Initializable{
     @FXML
     public Label adreseeName;
 
+    @FXML
+    public TextFlow imagePreview;
+
     private Map<String,ObservableList<Node>> textFlowsMap = new HashMap<>();
     private String previousUser = "";
 
@@ -63,6 +69,11 @@ public class ChatPage implements Initializable{
                             e.printStackTrace();
                         } catch (IOException e) {
                             e.printStackTrace();
+                            try {
+                                Thread.sleep(15000);
+                            } catch (InterruptedException e1) {
+                                e1.printStackTrace();
+                            }
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
                         }
@@ -120,7 +131,16 @@ public class ChatPage implements Initializable{
                 boolean success = false;
                 if (files != null) {
                     File file = files.get(0);
+                    if(imagePreview.getChildren().size()>0){
+                        imagePreview.getChildren().remove(0,1);
+                    }
                     typingField.setText(file.getAbsolutePath());
+                    Image image = new Image("file:"+file.getAbsolutePath());
+                    ImageView imageView = new ImageView();
+                    imageView.setFitWidth(image.getWidth()> imagePreview.getWidth() ? imagePreview.getWidth(): image.getWidth());
+                    imageView.setPreserveRatio(true);
+                    imageView.setImage(image);
+                    imagePreview.getChildren().add(imageView);
                     success = true;
                 }
                 /*
@@ -178,6 +198,9 @@ public class ChatPage implements Initializable{
     public void handleSendingMessage() throws IOException {
         String textOfMessage = typingField.getText();
         String selectedGuy = userContacts.getSelectionModel().getSelectedItem();
+        if(imagePreview.getChildren().size()>0){
+            imagePreview.getChildren().remove(0,1);
+        }
         Message m;
         if(textOfMessage.toUpperCase().contains(imageFormats.get(0))){
             BufferedImage bufferimage = ImageIO.read(new File(textOfMessage));
@@ -188,13 +211,16 @@ public class ChatPage implements Initializable{
             ImageView imageView = new ImageView();
             Image image = new Image("file:"+textOfMessage);
             imageView.setImage(image);
-            imageView.setFitHeight(600);
-            imageView.setFitWidth(600);
+            imageView.setFitWidth(image.getWidth()> adreseeTextField.getWidth() ? 500 : image.getWidth());
+            imageView.setPreserveRatio(true);
             adreseeTextField.getChildren().add(imageView);
             typingField.clear();
             ServerConnection.getServerConnectionInstance().output.writeObject(m);
         } else{
-            Text textToAdd = new Text(typingField.getText()+"\n");
+            Label textToAdd = new Label();
+            textToAdd.setText(typingField.getText());
+            textToAdd.setPrefWidth(570);
+            textToAdd.setAlignment(Pos.CENTER_RIGHT);
             adreseeTextField.getChildren().add(textToAdd);
             typingField.clear();
             m = new Message(EMessageType.TEXT, textOfMessage, selectedGuy, ServerConnection.getServerConnectionInstance().myName);
@@ -223,10 +249,13 @@ public class ChatPage implements Initializable{
                 break;
             case TEXT:
                 if(m.getAdressee() != null){
-                    Text newMessage = new Text(m.getTextMessage()+"\n");
-                    adreseeTextField.getChildren().add(newMessage);
+                    Label textToAdd = new Label();
+                    textToAdd.setText(m.getTextMessage());
+                    textToAdd.setPrefWidth(570);
+                    textToAdd.setAlignment(Pos.CENTER_LEFT);
+                    //switchViewWhileHandlingMessage(m);
+                    adreseeTextField.getChildren().add(textToAdd);
                     //SocketServer.getUserNameAndPrintWriterMap().get(m.getAdressee()).writeObject(m);
-                    switchViewWhileHandlingMessage(m);
                     sp.vvalueProperty().bind(adreseeTextField.heightProperty());
 
                 }
@@ -235,11 +264,12 @@ public class ChatPage implements Initializable{
                 if(m.getAdressee()!= null){
                     Image i = new Image(new ByteArrayInputStream(m.getFileMessage()));
                     ImageView imageView = new ImageView(i);
-                    imageView.setFitHeight(600);
-                    imageView.setFitWidth(600);
+                    imageView.setImage(i);
+                    imageView.setFitWidth(i.getWidth()> adreseeTextField.getWidth() ? 500 : i.getWidth());
+                    imageView.setPreserveRatio(true);
+                    //switchViewWhileHandlingMessage(m);
                     adreseeTextField.getChildren().add(imageView);
                     FileChooser aa = new FileChooser();
-                    switchViewWhileHandlingMessage(m);
                     sp.vvalueProperty().bind(adreseeTextField.heightProperty());
                     File dest = aa.showSaveDialog(typingField.getScene().getWindow());
                     if (dest != null) {
