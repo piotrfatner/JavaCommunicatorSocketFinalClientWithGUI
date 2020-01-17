@@ -49,4 +49,8 @@ public class Message implements Serializable{
     public String getAdressee() {
         return adressee;
     }
+
+    public String getSender() {
+        return sender;
+    }
 }

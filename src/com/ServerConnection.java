@@ -19,9 +19,9 @@ public class ServerConnection {
         return serverConnectionInstance;
     }
 
-    public void runServerConnection() throws IOException {
+    public void runServerConnection(String[] args) throws IOException {
         // Change host address to server address. Previous: 192.168.1.14
-        Socket socket = new Socket("127.0.0.1", 59001);
+        Socket socket = new Socket(args[0], 59001);
         output = new ObjectOutputStream(socket.getOutputStream());
         input = new ObjectInputStream(socket.getInputStream());
     }
